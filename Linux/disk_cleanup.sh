@@ -469,7 +469,7 @@ main() {
     echo -e "${BLUE}================================================${NC}"
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ "${BASH_SOURCE[0]:-}" == "${0}" ]]; then
     if [[ $EUID -eq 0 ]]; then
         echo -e "${YELLOW}Warning: Running as root. This will clean system-wide files.${NC}"
         echo -e "${YELLOW}Press Ctrl+C within 5 seconds to cancel...${NC}"
