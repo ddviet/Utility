@@ -300,7 +300,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
-                usage
+                print_usage
                 ;;
             -d|--dry-run)
                 dry_run=true
@@ -332,11 +332,11 @@ main() {
                 ;;
             -*)
                 echo -e "${RED}Unknown option: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
             *)
                 echo -e "${RED}Unexpected argument: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
         esac
     done

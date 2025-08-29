@@ -27,50 +27,130 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-usage() {
-    echo "Usage: $0 [OPTIONS] SOURCE DESTINATION"
-    echo ""
-    echo "Options:"
-    echo "  -h, --help          Show this help message"
-    echo "  -n, --name NAME     Backup set name (default: basename of source)"
-    echo "  -c, --compress TYPE Compression: gzip, bzip2, xz, none (default: gzip)"
-    echo "  -k, --keep-policy POLICY Retention policy (default: '7d,4w,12m')"
-    echo "  -e, --exclude PATTERN Additional exclude pattern"
-    echo "  -i, --incremental   Incremental backup (requires rsync)"
-    echo "  -f, --full          Force full backup"
-    echo "  -v, --verbose       Verbose output"
-    echo "  -t, --type TYPE     Backup type: tar, rsync (default: tar)"
-    echo "  -s, --schedule      Show next scheduled cleanup times"
-    echo "  --dry-run           Show what would be done without doing it"
-    echo "  --encrypt           Encrypt backup (requires gpg)"
-    echo "  --email EMAIL       Send notification email on completion"
-    echo ""
-    echo "Keep Policy Format:"
-    echo "  Format: 'daily,weekly,monthly' where each is number + unit"
-    echo "  Units: d (days), w (weeks), m (months), y (years)"
-    echo "  Examples: '7d,4w,12m' = 7 daily, 4 weekly, 12 monthly"
-    echo "            '30d' = 30 daily backups only"
-    echo ""
-    echo "Examples:"
-    echo "  $0 /home/user /backup/location"
-    echo "  $0 -k '14d,8w,24m' -c xz /var/www /backups/web"
-    echo "  $0 -i -t rsync /home/user /backup/incremental"
-    echo ""
-    echo "EXAMPLES (run directly from GitHub):"
-    echo "  # Using curl - basic backup"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/backup_rotation.sh)\" -- /home/user /backup"
-    echo ""
-    echo "  # Using curl - with custom retention policy"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/backup_rotation.sh)\" -- -k '30d,12w' /var/www /backups"
-    echo ""
-    echo "  # Using wget - dry run to preview"
-    echo "  bash -c \"\$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/backup_rotation.sh)\" -- --dry-run /home/user /backup"
-    echo ""
-    echo "RECOMMENDED (download, review, then run):"
-    echo "  curl -fsSL -o /tmp/backup_rotation.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/backup_rotation.sh"
-    echo "  chmod +x /tmp/backup_rotation.sh"
-    echo "  /tmp/backup_rotation.sh --help          # Show help"
-    echo "  /tmp/backup_rotation.sh --dry-run /src /dest  # Test first"
+print_usage() {
+    cat <<'EOF'
+backup_rotation.sh — Automated Backup System with Intelligent Rotation
+
+USAGE
+    backup_rotation.sh [OPTIONS] SOURCE DESTINATION
+
+DESCRIPTION
+    Create automated backups with intelligent retention policies, supporting
+    multiple compression formats, encryption, and flexible rotation schedules.
+    Implements both full and incremental backup strategies with verification.
+
+OPTIONS
+    -h, --help              Show this help message
+    -n, --name NAME         Backup set name (default: basename of source)
+    -c, --compress TYPE     Compression: gzip, bzip2, xz, none (default: gzip)
+    -k, --keep-policy POLICY Retention policy (default: '7d,4w,12m')
+    -e, --exclude PATTERN   Additional exclude pattern (can use multiple times)
+    -i, --incremental       Incremental backup (requires rsync)
+    -f, --full              Force full backup
+    -v, --verbose           Verbose output
+    -t, --type TYPE         Backup type: tar, rsync (default: tar)
+    -s, --schedule          Show next scheduled cleanup times
+    --dry-run               Show what would be done without doing it
+    --encrypt               Encrypt backup with GPG
+    --email EMAIL           Send notification email on completion
+    --verify                Verify backup after creation
+    --version               Show script version
+
+RETENTION POLICY FORMAT
+    Format:   'daily,weekly,monthly' where each is number + unit
+    Units:    d (days), w (weeks), m (months), y (years)
+    
+    Examples:
+    '7d,4w,12m'    Keep 7 daily, 4 weekly, 12 monthly backups
+    '30d'          Keep 30 daily backups only
+    '14d,8w,6m,2y' Keep 14 daily, 8 weekly, 6 monthly, 2 yearly
+
+EXAMPLES (run directly from GitHub)
+    # Basic backup with default retention
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/backup_rotation.sh)" -- /home/user /backup
+
+    # Custom retention policy with compression
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/backup_rotation.sh)" -- -k '30d,12w' -c xz /var/www /backups
+
+    # Incremental backup with rsync
+    bash -c "$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/backup_rotation.sh)" -- -i -t rsync /data /backup/incremental
+
+    # Preview with dry-run
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/backup_rotation.sh)" -- --dry-run /home /backup
+
+RECOMMENDED (download, review, then run)
+    curl -fsSL -o /tmp/backup_rotation.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/backup_rotation.sh
+    chmod +x /tmp/backup_rotation.sh
+    /tmp/backup_rotation.sh --help                    # Show help
+    /tmp/backup_rotation.sh --dry-run /src /dest      # Preview operation
+    /tmp/backup_rotation.sh -k '7d,4w,12m' /src /dest # Execute backup
+    /tmp/backup_rotation.sh -s /src /dest             # Show rotation schedule
+
+INSTALL AS SYSTEM COMMAND
+    sudo curl -fsSL -o /usr/local/bin/backup-rotate https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/backup_rotation.sh
+    sudo chmod +x /usr/local/bin/backup-rotate
+    backup-rotate --help
+
+COMMON USE CASES
+    Home Directory:     backup-rotate /home/user /backup/home
+    Web Server:         backup-rotate -c xz /var/www /backup/web
+    Database:           backup-rotate --encrypt /var/lib/mysql /backup/db
+    System Config:      backup-rotate -e '*.log' /etc /backup/config
+    Documents:          backup-rotate -k '365d' ~/Documents /backup/docs
+    Development:        backup-rotate -i -t rsync ~/projects /backup/dev
+
+BACKUP STRATEGIES
+    Full Backup:        Complete copy of all data
+    Incremental:        Only changed files since last backup
+    Differential:       Changed files since last full backup
+    Mirror:             Exact replica using rsync
+    Archive:            Compressed tarball with timestamps
+
+CRON AUTOMATION
+    # Daily backup at 2 AM
+    0 2 * * * /usr/local/bin/backup-rotate /home /backup/daily
+
+    # Weekly backup on Sunday
+    0 3 * * 0 /usr/local/bin/backup-rotate -f /var/www /backup/weekly
+
+    # Monthly backup on 1st
+    0 4 1 * * /usr/local/bin/backup-rotate -c xz /data /backup/monthly
+
+SAFETY FEATURES
+    Verification:       Optional backup integrity checking
+    Atomic Operations:  Temporary files ensure consistency
+    Exclude Patterns:   Skip temporary and cache files
+    Dry-Run Mode:       Preview all operations
+    Logging:            Detailed operation logs
+    Lock Files:         Prevent concurrent backups
+
+EXCLUDE PATTERNS
+    Default exclusions: .tmp, .cache, *.swp, .DS_Store
+    Custom patterns:    Use -e flag multiple times
+    Exclude file:       Create .backup-exclude in source
+
+ADVANCED EXAMPLES
+    # Encrypted backup with email notification
+    backup-rotate --encrypt --email admin@example.com /sensitive /secure
+
+    # Multiple excludes with custom name
+    backup-rotate -n "project" -e "*.log" -e "node_modules" /app /backup
+
+    # Incremental with verification
+    backup-rotate -i --verify -t rsync /large-data /backup/incremental
+
+    # Show rotation schedule
+    backup-rotate -s -k '7d,4w,12m,2y' /data /backup
+
+EXIT CODES
+    0   Successful backup and rotation
+    1   Invalid arguments or help displayed
+    2   Source or destination error
+    3   Backup operation failed
+    4   Rotation or cleanup error
+    5   Verification failed
+
+EOF
     exit 1
 }
 
@@ -411,7 +491,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
-                usage
+                print_usage
                 ;;
             -n|--name)
                 name="$2"
@@ -464,7 +544,7 @@ main() {
                 ;;
             -*)
                 echo -e "${RED}Unknown option: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
             *)
                 if [[ -z "$source" ]]; then
@@ -473,7 +553,7 @@ main() {
                     destination="$1"
                 else
                     echo -e "${RED}Too many arguments${NC}" >&2
-                    usage
+                    print_usage
                 fi
                 shift
                 ;;
@@ -498,7 +578,7 @@ main() {
     # Validate arguments
     if [[ -z "$source" || -z "$destination" ]]; then
         echo -e "${RED}Source and destination are required${NC}"
-        usage
+        print_usage
     fi
     
     if [[ ! -e "$source" ]]; then

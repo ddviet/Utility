@@ -28,41 +28,100 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
-usage() {
-    echo "Usage: $0 [OPTIONS] [DIRECTORY]"
-    echo ""
-    echo "Options:"
-    echo "  -h, --help          Show this help message"
-    echo "  -d, --detailed      Show detailed statistics per file"
-    echo "  -l, --languages     Show statistics by programming language"
-    echo "  -a, --authors       Show statistics by git authors"
-    echo "  -t, --timeline      Show development timeline (requires git)"
-    echo "  -e, --exclude PATTERN Exclude files matching pattern"
-    echo "  -o, --output FORMAT Output format: text, json, csv (default: text)"
-    echo "  --min-size BYTES    Minimum file size to include (default: 1)"
-    echo "  --max-depth DEPTH   Maximum directory depth (default: unlimited)"
-    echo ""
-    echo "Examples:"
-    echo "  $0                  # Basic stats for current directory"
-    echo "  $0 -l -a /path/to/project # Language and author stats"
-    echo "  $0 -o json --detailed     # Detailed output in JSON format"
-    echo ""
-    echo "EXAMPLES (run directly from GitHub):"
-    echo "  # Using curl - basic code statistics"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/code_stats.sh)\""
-    echo ""
-    echo "  # Using curl - language and author statistics"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/code_stats.sh)\" -- -l -a ."
-    echo ""
-    echo "  # Using wget - JSON output for automation"
-    echo "  bash -c \"\$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/code_stats.sh)\" -- -o json --detailed"
-    echo ""
-    echo "RECOMMENDED (download, review, then run):"
-    echo "  curl -fsSL -o /tmp/code_stats.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/code_stats.sh"
-    echo "  chmod +x /tmp/code_stats.sh"
-    echo "  /tmp/code_stats.sh --help          # Show help"
-    echo "  /tmp/code_stats.sh -l              # Language statistics"
-    exit 1
+print_usage() {
+    cat <<'EOF'
+code_stats.sh — Comprehensive Code Analysis and Statistics Tool
+
+USAGE
+    code_stats.sh [OPTIONS] [DIRECTORY]
+
+DESCRIPTION
+    Generate comprehensive statistics and analysis for code projects with
+    multi-language support, detailed metrics, and development timeline analysis.
+    Provides insights into project structure, code quality, and team contributions.
+
+OPTIONS
+    -h, --help           Show this help message
+    -d, --detailed       Show detailed statistics per file
+    -l, --languages      Show statistics by programming language
+    -a, --authors        Show statistics by git authors
+    -t, --timeline       Show development timeline (requires git)
+    -e, --exclude PATTERN Exclude files matching pattern
+    -o, --output FORMAT  Output format: text, json, csv (default: text)
+    --min-size BYTES     Minimum file size to include (default: 1)
+    --max-depth DEPTH    Maximum directory depth (default: unlimited)
+    --version            Show script version
+
+SUPPORTED LANGUAGES
+    JavaScript, Python, Java, C/C++, C#, PHP, Ruby, Go, Rust, Swift,
+    Kotlin, Scala, R, MATLAB, Shell, PowerShell, Perl, Lua, HTML, CSS,
+    SQL, XML, JSON, YAML, TOML, Markdown, Docker, Makefile
+
+OUTPUT FORMATS
+    text    Human-readable formatted output with colors
+    json    Machine-readable JSON format for automation
+    csv     Comma-separated values for spreadsheet import
+
+EXAMPLES (run directly from GitHub)
+    # Basic code statistics for current directory
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/code_stats.sh)"
+
+    # Language and author statistics with detailed breakdown
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/code_stats.sh)" -- -l -a -d .
+
+    # JSON output for automation and CI/CD integration
+    bash -c "$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/code_stats.sh)" -- -o json --detailed
+
+    # Timeline analysis for project history
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/code_stats.sh)" -- -t -a /path/to/project
+
+RECOMMENDED (download, review, then run)
+    curl -fsSL -o /tmp/code_stats.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/code_stats.sh
+    chmod +x /tmp/code_stats.sh
+    /tmp/code_stats.sh --help               # Show this help
+    /tmp/code_stats.sh -l                   # Language statistics
+    /tmp/code_stats.sh -a -t                # Author and timeline analysis
+    /tmp/code_stats.sh -o json > stats.json # Export to JSON
+
+INSTALL AS SYSTEM COMMAND
+    sudo curl -fsSL -o /usr/local/bin/code-stats https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/code_stats.sh
+    sudo chmod +x /usr/local/bin/code-stats
+    code-stats -l -a .
+
+AUTOMATION EXAMPLES
+    # CI/CD integration for code metrics
+    code-stats -o json --detailed > metrics.json
+    
+    # Weekly project analysis report
+    code-stats -l -a -t /projects/webapp | mail -s "Weekly Code Stats" team@company.com
+    
+    # Multi-project comparison
+    for project in ~/projects/*/; do
+        echo "=== $project ==="
+        code-stats -l "$project"
+    done
+
+PROJECT ANALYSIS FEATURES
+    Language Detection:   Automatic identification of 25+ programming languages
+    Code Metrics:        Lines of code, comments, blank lines per language
+    File Analysis:       Size, complexity, and distribution statistics
+    Git Integration:     Author contributions and development timeline
+    Quality Metrics:     Comment ratios and code organization insights
+
+COMMON USE CASES
+    Project Assessment:   Evaluate codebase size and complexity
+    Team Analytics:      Analyze developer contributions and patterns
+    Language Migration:  Track technology stack evolution
+    Code Review:         Identify areas needing attention or refactoring
+    Documentation:       Generate project statistics for reports
+
+EXIT CODES
+    0   Analysis completed successfully
+    1   Directory not found or access denied
+    2   Invalid output format or options
+    3   Git repository errors (for git-based features)
+
+EOF
 }
 
 declare -A LANGUAGE_EXTENSIONS=(
@@ -480,7 +539,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
-                usage
+                print_usage
                 ;;
             -d|--detailed)
                 detailed=true
@@ -514,9 +573,13 @@ main() {
                 max_depth="$2"
                 shift 2
                 ;;
+            --version)
+                echo "code_stats.sh version $SCRIPT_VERSION"
+                exit 0
+                ;;
             -*)
                 echo -e "${RED}Unknown option: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
             *)
                 directory="$1"

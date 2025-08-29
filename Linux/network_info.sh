@@ -28,42 +28,124 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
-usage() {
-    echo "Usage: $0 [OPTIONS]"
-    echo ""
-    echo "Options:"
-    echo "  -h, --help          Show this help message"
-    echo "  -i, --interfaces    Show network interfaces only"
-    echo "  -r, --routing       Show routing information only"
-    echo "  -c, --connectivity  Test connectivity to common hosts"
-    echo "  -p, --ports         Show listening ports and services"
-    echo "  -s, --speed         Test network speed (requires speedtest-cli)"
-    echo "  -w, --wifi          Show WiFi information"
-    echo "  -d, --dns           Show DNS configuration and test resolution"
-    echo "  -o, --output FORMAT Output format: text, json (default: text)"
-    echo "  -v, --verbose       Show detailed information"
-    echo ""
-    echo "Examples:"
-    echo "  $0                  # Show all network information"
-    echo "  $0 -i -r            # Show interfaces and routing only"
-    echo "  $0 -c -s            # Test connectivity and speed"
-    echo ""
-    echo "EXAMPLES (run directly from GitHub):"
-    echo "  # Using curl - full network info"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/network_info.sh)\""
-    echo ""
-    echo "  # Using curl - interfaces and connectivity test"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/network_info.sh)\" -- -i -c"
-    echo ""
-    echo "  # Using wget - JSON output for automation"
-    echo "  bash -c \"\$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/network_info.sh)\" -- -o json"
-    echo ""
-    echo "RECOMMENDED (download, review, then run):"
-    echo "  curl -fsSL -o /tmp/network_info.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/network_info.sh"
-    echo "  chmod +x /tmp/network_info.sh"
-    echo "  /tmp/network_info.sh --help        # Show help"
-    echo "  /tmp/network_info.sh -v            # Verbose output"
-    exit 1
+print_usage() {
+    cat <<'EOF'
+network_info.sh — Comprehensive Network Configuration and Diagnostics Tool
+
+USAGE
+    network_info.sh [OPTIONS]
+
+DESCRIPTION
+    Display comprehensive network configuration and connectivity information
+    with performance diagnostics, detailed analysis of network interfaces,
+    routing tables, and connectivity testing to common hosts and services.
+
+OPTIONS
+    -h, --help           Show this help message
+    -i, --interfaces     Show network interfaces configuration only
+    -r, --routing        Show routing information and gateway details only
+    -c, --connectivity   Test connectivity to common hosts and services
+    -p, --ports          Show listening ports and running services
+    -s, --speed          Test network speed (requires speedtest-cli)
+    -w, --wifi           Show WiFi network information and signal strength
+    -d, --dns            Show DNS configuration and test resolution
+    -o, --output FORMAT  Output format: text, json (default: text)
+    -v, --verbose        Show detailed information with extra diagnostics
+    --version            Show script version
+
+NETWORK ANALYSIS FEATURES
+    Interface Detection:  Complete network interface configuration display
+    Routing Analysis:     Gateway information and route table analysis
+    Connectivity Tests:   Multi-host connectivity verification
+    DNS Testing:          Resolution testing and server analysis
+    Port Scanning:        Local service detection and port analysis
+    WiFi Diagnostics:     Signal strength and network quality metrics
+    Speed Testing:        Bandwidth measurement with external services
+
+OUTPUT FORMATS
+    text    Human-readable formatted output with colors
+    json    Machine-readable JSON format for automation
+
+EXAMPLES (run directly from GitHub)
+    # Complete network information display
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/network_info.sh)"
+
+    # Interface and routing information only
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/network_info.sh)" -- -i -r
+
+    # Connectivity and speed testing
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/network_info.sh)" -- -c -s
+
+    # JSON output for automation and monitoring
+    bash -c "$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/network_info.sh)" -- -o json
+
+    # WiFi and DNS diagnostics with verbose output
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/network_info.sh)" -- -w -d -v
+
+RECOMMENDED (download, review, then run)
+    curl -fsSL -o /tmp/network_info.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/network_info.sh
+    chmod +x /tmp/network_info.sh
+    /tmp/network_info.sh --help        # Show this help
+    /tmp/network_info.sh -v            # Verbose network analysis
+    /tmp/network_info.sh -c -s         # Connectivity and speed tests
+    /tmp/network_info.sh -o json       # JSON output for scripts
+
+INSTALL AS SYSTEM COMMAND
+    sudo curl -fsSL -o /usr/local/bin/netinfo https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/network_info.sh
+    sudo chmod +x /usr/local/bin/netinfo
+    netinfo -c -s
+
+AUTOMATION EXAMPLES
+    # Network monitoring script
+    netinfo -o json > network_status.json
+    
+    # Connectivity health check
+    netinfo -c || echo "Network issues detected" | mail admin@company.com
+    
+    # Periodic network diagnostics
+    while true; do
+        netinfo -i -r -c
+        sleep 300
+    done
+
+DIAGNOSTIC CAPABILITIES
+    System Information:   Hostname, kernel, uptime, and system status
+    Interface Analysis:   IP addresses, MAC addresses, link status
+    Routing Tables:       Default routes, gateways, and route metrics
+    DNS Resolution:       Nameserver configuration and resolution testing
+    Connectivity Tests:   Ping tests to Google, Cloudflare, GitHub, etc.
+    Service Detection:    Local listening services and port analysis
+    WiFi Diagnostics:     Signal quality, SSID, and frequency information
+    Speed Testing:        Download/upload speed measurement
+    Traffic Statistics:   Network interface usage and transfer statistics
+
+CONNECTIVITY TEST TARGETS
+    Google DNS (8.8.8.8):       Primary DNS connectivity
+    Cloudflare DNS (1.1.1.1):   Alternative DNS connectivity  
+    Google.com:                  HTTP/HTTPS connectivity
+    GitHub.com:                  Development service connectivity
+    StackOverflow.com:           General internet connectivity
+
+COMMON USE CASES
+    Network Troubleshooting:  Diagnose connectivity and configuration issues
+    System Administration:    Monitor network status and performance
+    Security Auditing:        Identify open ports and running services
+    Performance Testing:      Measure network speed and latency
+    Documentation:            Generate network configuration reports
+    Automation:               Monitor network health in scripts
+
+SUPPORTED PLATFORMS
+    Linux:   Full feature support with ip, ss, iwconfig commands
+    macOS:   Basic support with ifconfig, netstat commands
+    Generic: Fallback support for minimal Unix environments
+
+EXIT CODES
+    0   Network analysis completed successfully
+    1   Network connectivity issues detected
+    2   Missing network diagnostic tools
+    3   JSON output formatting errors
+
+EOF
 }
 
 show_system_info() {
@@ -430,7 +512,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
-                usage
+                print_usage
                 ;;
             -i|--interfaces)
                 show_interfaces_only=true
@@ -475,13 +557,17 @@ main() {
                 verbose=true
                 shift
                 ;;
+            --version)
+                echo "network_info.sh version $SCRIPT_VERSION"
+                exit 0
+                ;;
             -*)
                 echo -e "${RED}Unknown option: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
             *)
                 echo -e "${RED}Unexpected argument: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
         esac
     done

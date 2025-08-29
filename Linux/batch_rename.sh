@@ -28,62 +28,116 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
-usage() {
-    echo "Usage: $0 [OPTIONS] [FILES...]"
-    echo ""
-    echo "Rename Operations:"
-    echo "  -p, --pattern 'FROM:TO'  Replace pattern (supports regex)"
-    echo "  -l, --lowercase          Convert to lowercase"
-    echo "  -u, --uppercase          Convert to uppercase"
-    echo "  -c, --capitalize         Capitalize first letter of each word"
-    echo "  -s, --spaces CHAR        Replace spaces with character (e.g., '_', '-')"
-    echo "  -r, --remove CHARS       Remove specific characters"
-    echo "  -n, --number START       Add numbers (starting from START)"
-    echo "  --prefix PREFIX          Add prefix to filenames"
-    echo "  --suffix SUFFIX          Add suffix to filenames (before extension)"
-    echo "  --ext EXTENSION          Change file extension"
-    echo ""
-    echo "Options:"
-    echo "  -h, --help               Show this help message"
-    echo "  -d, --directory DIR      Target directory (default: current)"
-    echo "  -f, --filter PATTERN     Only rename files matching pattern"
-    echo "  -e, --exclude PATTERN    Exclude files matching pattern"
-    echo "  -R, --recursive          Process directories recursively"
-    echo "  -t, --type TYPE          File type filter (e.g., 'jpg,png,txt')"
-    echo "  -v, --verbose            Show detailed operations"
-    echo "  -n, --dry-run            Show what would be renamed without renaming"
-    echo "  -i, --interactive        Ask before each rename"
-    echo "  -b, --backup             Create backup before renaming"
-    echo "  --undo FILE              Undo previous rename using backup file"
-    echo "  --save-log FILE          Save rename log for undo operations"
-    echo ""
-    echo "Pattern Examples:"
-    echo "  -p 'IMG_:Photo_'         # Replace 'IMG_' with 'Photo_'"
-    echo "  -p '([0-9]+):\\1_processed'  # Add '_processed' after numbers"
-    echo "  -p '(.*)\\.(.*):\\1_backup.\\2'  # Add '_backup' before extension"
-    echo ""
-    echo "Examples:"
-    echo "  $0 -l -s '_' *.txt                      # Lowercase and replace spaces"
-    echo "  $0 -p 'IMG_:Photo_' -n 1 /photos/*.jpg  # Rename with pattern and numbers"
-    echo "  $0 --prefix 'vacation_' -R /photos      # Add prefix recursively"
-    echo "  $0 --dry-run -c *.docx                  # Preview capitalize operation"
-    echo "  $0 --undo rename_log.txt                # Undo previous operation"
-    echo ""
-    echo "EXAMPLES (run directly from GitHub):"
-    echo "  # Using curl - preview lowercase conversion"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/batch_rename.sh)\" -- --dry-run -l *.txt"
-    echo ""
-    echo "  # Using curl - add prefix to all images"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/batch_rename.sh)\" -- --prefix 'IMG_' *.jpg *.png"
-    echo ""
-    echo "  # Using wget - replace pattern in filenames"
-    echo "  bash -c \"\$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/batch_rename.sh)\" -- -p 'old:new' *"
-    echo ""
-    echo "RECOMMENDED (download, review, then run):"
-    echo "  curl -fsSL -o /tmp/batch_rename.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/batch_rename.sh"
-    echo "  chmod +x /tmp/batch_rename.sh"
-    echo "  /tmp/batch_rename.sh --help             # Show help"
-    echo "  /tmp/batch_rename.sh --dry-run -l *.txt # Test first"
+print_usage() {
+    cat <<'EOF'
+batch_rename.sh — Bulk File Renaming Tool with Pattern Support
+
+USAGE
+    batch_rename.sh [OPTIONS] [FILES...]
+
+DESCRIPTION
+    Perform bulk file renaming operations using various patterns and rules.
+    Supports regex patterns, case conversion, numbering, and custom transformations
+    with safe operations including dry-run mode and undo capabilities.
+
+RENAME OPERATIONS
+    -p, --pattern 'FROM:TO'  Replace pattern (supports regex)
+    -l, --lowercase          Convert to lowercase
+    -u, --uppercase          Convert to uppercase
+    -c, --capitalize         Capitalize first letter of each word
+    -s, --spaces CHAR        Replace spaces with character (e.g., '_', '-')
+    -r, --remove CHARS       Remove specific characters
+    -n, --number START       Add numbers (starting from START)
+    --prefix PREFIX          Add prefix to filenames
+    --suffix SUFFIX          Add suffix to filenames (before extension)
+    --ext EXTENSION          Change file extension
+
+OPTIONS
+    -h, --help               Show this help message
+    -d, --directory DIR      Target directory (default: current)
+    -f, --filter PATTERN     Only rename files matching pattern
+    -e, --exclude PATTERN    Exclude files matching pattern
+    -R, --recursive          Process directories recursively
+    -t, --type TYPE          File type filter (e.g., 'jpg,png,txt')
+    -v, --verbose            Show detailed operations
+    --dry-run                Show what would be renamed without renaming
+    -i, --interactive        Ask before each rename
+    -b, --backup             Create backup before renaming
+    --undo FILE              Undo previous rename using backup file
+    --save-log FILE          Save rename log for undo operations
+    --version                Show script version
+
+PATTERN SYNTAX
+    Basic Replace:     'old:new'              Replace 'old' with 'new'
+    Regex Groups:      '([0-9]+):\1_copy'     Capture and reuse groups
+    Extension:         '(.*)\.(.*):\1_v2.\2'  Modify before extension
+    Multiple Groups:   '(.+)_(.+):\2_\1'      Swap parts around delimiter
+
+EXAMPLES (run directly from GitHub)
+    # Preview lowercase conversion for all text files
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/batch_rename.sh)" -- --dry-run -l *.txt
+
+    # Add prefix to all images
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/batch_rename.sh)" -- --prefix 'IMG_' *.jpg *.png
+
+    # Replace pattern in filenames using wget
+    bash -c "$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/batch_rename.sh)" -- -p 'old:new' *
+
+    # Complex rename with multiple operations
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/batch_rename.sh)" -- -l -s '_' -p 'draft:final' *.doc
+
+RECOMMENDED (download, review, then run)
+    curl -fsSL -o /tmp/batch_rename.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/batch_rename.sh
+    chmod +x /tmp/batch_rename.sh
+    /tmp/batch_rename.sh --help                    # Show help
+    /tmp/batch_rename.sh --dry-run -l *.txt        # Preview operation
+    /tmp/batch_rename.sh -l -s '_' *.txt           # Execute rename
+    /tmp/batch_rename.sh --undo rename_log.txt     # Undo if needed
+
+INSTALL AS SYSTEM COMMAND
+    sudo curl -fsSL -o /usr/local/bin/batch-rename https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/batch_rename.sh
+    sudo chmod +x /usr/local/bin/batch-rename
+    batch-rename --help
+
+COMMON USE CASES
+    Photo Organization:      batch-rename --prefix 'vacation_' -n 1 *.jpg
+    Document Cleanup:        batch-rename -l -s '_' -r '()[]' *.doc
+    Code File Rename:        batch-rename -p 'test_:spec_' *.js
+    Extension Change:        batch-rename --ext 'bak' *.txt
+    Date Prefix:             batch-rename --prefix "$(date +%Y%m%d)_" *
+    Remove Spaces:           batch-rename -s '_' *
+    Capitalize Words:        batch-rename -c *.txt
+    Sequential Numbering:    batch-rename -n 001 --prefix 'file_' *
+
+SAFETY FEATURES
+    Dry-Run Mode:      Preview all changes before executing
+    Backup Creation:   Optional backup before renaming
+    Undo Support:      Revert operations using log files
+    Interactive Mode:  Confirm each rename individually
+    Collision Check:   Prevents overwriting existing files
+    Pattern Validation: Verifies regex patterns before use
+
+ADVANCED EXAMPLES
+    # Organize photos by date with sequential numbering
+    batch-rename --prefix "$(date +%Y%m%d)_photo_" -n 001 *.jpg
+
+    # Clean up downloaded files
+    batch-rename -p '\[.*\]:' -p '^\d+_:' -s '_' -l *.pdf
+
+    # Prepare files for web upload
+    batch-rename -l -s '-' -r '()[]&' --suffix '_web' *.png
+
+    # Batch process with specific pattern
+    batch-rename -p '(.*)_raw\.(.*):\1_processed.\2' *.raw
+
+EXIT CODES
+    0   Successful operation
+    1   Invalid arguments or help displayed
+    2   No files to rename or pattern error
+    3   File operation error (permissions, conflicts)
+    4   Undo operation failed
+
+EOF
     exit 1
 }
 
@@ -469,7 +523,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
-                usage
+                print_usage
                 ;;
             -p|--pattern)
                 operations+=("pattern:$2")
@@ -558,7 +612,7 @@ main() {
                 ;;
             -*)
                 echo -e "${RED}Unknown option: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
             *)
                 files+=("$1")
@@ -582,7 +636,7 @@ main() {
     # Check if any operations are specified
     if [[ ${#operations[@]} -eq 0 ]]; then
         echo -e "${RED}No rename operations specified${NC}"
-        usage
+        print_usage
     fi
     
     echo -e "${BLUE}================================================${NC}"

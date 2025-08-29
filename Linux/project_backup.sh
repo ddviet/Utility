@@ -27,45 +27,137 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-usage() {
-    echo "Usage: $0 [OPTIONS] [PROJECT_DIR] [BACKUP_DIR]"
-    echo ""
-    echo "Options:"
-    echo "  -h, --help          Show this help message"
-    echo "  -n, --name NAME     Custom backup name (default: project directory name)"
-    echo "  -c, --compress TYPE Compression type: gzip, bzip2, xz (default: gzip)"
-    echo "  -e, --exclude PATTERN Additional exclude pattern"
-    echo "  -i, --include-git   Include .git directory"
-    echo "  -v, --verbose       Verbose output"
-    echo "  -r, --rotate COUNT  Keep only N most recent backups (default: 10)"
-    echo "  -s, --skip-large    Skip files larger than 100MB"
-    echo "  --dry-run           Show what would be backed up"
-    echo ""
-    echo "Arguments:"
-    echo "  PROJECT_DIR         Directory to backup (default: current directory)"
-    echo "  BACKUP_DIR          Backup destination (default: ./backups)"
-    echo ""
-    echo "Examples:"
-    echo "  $0                  # Backup current project to ./backups"
-    echo "  $0 /home/user/myproject /backup/location"
-    echo "  $0 -n webapp -c xz -r 5 /var/www/html"
-    echo ""
-    echo "EXAMPLES (run directly from GitHub):"
-    echo "  # Using curl - backup current directory"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/project_backup.sh)\""
-    echo ""
-    echo "  # Using curl - dry run to preview backup"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/project_backup.sh)\" -- --dry-run ."
-    echo ""
-    echo "  # Using wget - backup with custom settings"
-    echo "  bash -c \"\$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/project_backup.sh)\" -- -c xz -r 5 /project /backups"
-    echo ""
-    echo "RECOMMENDED (download, review, then run):"
-    echo "  curl -fsSL -o /tmp/project_backup.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/project_backup.sh"
-    echo "  chmod +x /tmp/project_backup.sh"
-    echo "  /tmp/project_backup.sh --help          # Show help"
-    echo "  /tmp/project_backup.sh --dry-run       # Preview backup"
-    exit 1
+print_usage() {
+    cat <<'EOF'
+project_backup.sh — Intelligent Code Project Backup and Archive Tool
+
+USAGE
+    project_backup.sh [OPTIONS] [PROJECT_DIR] [BACKUP_DIR]
+
+DESCRIPTION
+    Create intelligent backups of code projects with smart exclusions,
+    automatic project type detection, multiple compression formats,
+    backup rotation, and space-efficient archiving strategies.
+
+OPTIONS
+    -h, --help           Show this help message
+    -n, --name NAME      Custom backup name (default: project directory name)
+    -c, --compress TYPE  Compression: gzip, bzip2, xz (default: gzip)
+    -e, --exclude PATTERN Additional exclude pattern (regex)
+    -i, --include-git    Include .git directory in backup
+    -v, --verbose        Show detailed output during backup process
+    -r, --rotate COUNT   Keep only N most recent backups (default: 10)
+    -s, --skip-large     Skip files larger than 100MB
+    --dry-run            Preview what would be backed up without creating archive
+    --version            Show script version
+
+ARGUMENTS
+    PROJECT_DIR          Directory to backup (default: current directory)
+    BACKUP_DIR           Backup destination directory (default: ./backups)
+
+SUPPORTED PROJECT TYPES
+    Node.js:    package.json, excludes node_modules, dist, build
+    Python:     requirements.txt, excludes __pycache__, venv, .pytest_cache
+    Rust:       Cargo.toml, excludes target directory
+    Go:         go.mod, excludes vendor, bin directories
+    Java:       pom.xml/build.gradle, excludes target, build, .gradle
+    PHP:        composer.json, excludes vendor directory
+    Ruby:       Gemfile, excludes .bundle, vendor/bundle
+    Dart:       pubspec.yaml, excludes .dart_tool, build
+    Elixir:     mix.exs, excludes _build, deps
+    Generic:    Standard exclusions for common development files
+
+COMPRESSION OPTIONS
+    gzip        Fast compression, good compatibility (.tar.gz)
+    bzip2       Better compression ratio, slower (.tar.bz2)
+    xz          Best compression ratio, slower (.tar.xz)
+
+SMART EXCLUSIONS
+    Build Artifacts:     node_modules, target, build, dist directories
+    Dependencies:        vendor, .bundle, __pycache__, site-packages
+    Temporary Files:     *.tmp, *.swp, *.log, *~, .DS_Store
+    Security Files:      .env, secrets.*, *.key, *.pem, *.p12
+    Version Control:     .git (optional), .svn, .hg
+    IDE Files:          .vscode, .idea, *.sublime-*
+    Cache Directories:   .cache, .pytest_cache, .mypy_cache
+
+EXAMPLES (run directly from GitHub)
+    # Backup current directory with default settings
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/project_backup.sh)"
+
+    # Preview backup contents without creating archive
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/project_backup.sh)" -- --dry-run .
+
+    # Backup with maximum compression and custom settings
+    bash -c "$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/project_backup.sh)" -- -c xz -r 5 -v /project /backups
+
+    # Include git history and use custom name
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/project_backup.sh)" -- -n webapp-v2 -i -c bzip2 /var/www/html
+
+RECOMMENDED (download, review, then run)
+    curl -fsSL -o /tmp/project_backup.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/project_backup.sh
+    chmod +x /tmp/project_backup.sh
+    /tmp/project_backup.sh --help            # Show this help
+    /tmp/project_backup.sh --dry-run         # Preview backup contents
+    /tmp/project_backup.sh -v -c xz          # Verbose backup with xz compression
+    /tmp/project_backup.sh -i -r 20          # Include git, keep 20 backups
+
+INSTALL AS SYSTEM COMMAND
+    sudo curl -fsSL -o /usr/local/bin/backup-project https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/project_backup.sh
+    sudo chmod +x /usr/local/bin/backup-project
+    backup-project -v -c xz ~/myproject
+
+AUTOMATION EXAMPLES
+    # Daily automated backup with rotation
+    backup-project -r 30 -c xz /var/www/html /backups/daily
+    
+    # Pre-deployment backup
+    backup-project -n "pre-deploy-$(date +%Y%m%d)" -i /app /backups/deployments
+    
+    # Weekly project archives
+    for project in ~/projects/*/; do
+        backup-project -c bzip2 "$project" ~/archives/weekly
+    done
+
+BACKUP FEATURES
+    Project Detection:     Automatic identification of project types
+    Smart Exclusions:      Language-specific exclusion patterns
+    Size Optimization:     Skip large files and build artifacts
+    Compression Options:   Multiple compression algorithms
+    Rotation Management:   Automatic cleanup of old backups
+    Timestamping:         Automatic timestamp-based naming
+    Progress Tracking:     Real-time backup progress information
+    Dry Run Mode:         Preview backup contents before creation
+
+SAFETY FEATURES
+    Preview Mode:         See what will be backed up before running
+    Rotation Limits:      Prevent excessive backup accumulation
+    Error Handling:       Graceful handling of permission and space issues
+    Pattern Exclusion:    Avoid backing up sensitive or large files
+    Validation:           Verify backup integrity after creation
+
+COMMON USE CASES
+    Development Backup:   Regular snapshots of active projects
+    Deployment Prep:      Pre-deployment code archiving
+    Version Snapshots:    Milestone and release backups
+    Collaboration:        Share project snapshots with team members
+    Migration:            Prepare projects for server migration
+    Archive Storage:      Long-term project preservation
+
+FILE SIZE HANDLING
+    Large File Detection: Identify files over 100MB
+    Skip Options:         Exclude large files from backup
+    Size Reporting:       Display backup size and space usage
+    Compression Stats:    Show compression ratio and efficiency
+
+EXIT CODES
+    0   Backup created successfully
+    1   Backup creation failed or interrupted
+    2   Invalid directory or permission issues
+    3   Compression or archive errors
+    4   Backup rotation failures
+
+EOF
 }
 
 get_project_type() {
@@ -375,7 +467,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
-                usage
+                print_usage
                 ;;
             -n|--name)
                 backup_name="$2"
@@ -409,9 +501,13 @@ main() {
                 dry_run=true
                 shift
                 ;;
+            --version)
+                echo "project_backup.sh version $SCRIPT_VERSION"
+                exit 0
+                ;;
             -*)
                 echo -e "${RED}Unknown option: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
             *)
                 if [[ -z "${1//\/}" ]] || [[ ! -d "$1" ]] && [[ ${#additional_excludes[@]} -eq 0 ]]; then

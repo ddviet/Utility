@@ -27,51 +27,135 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
-usage() {
-    echo "Usage: $0 [OPTIONS] [SERVICE...]"
-    echo ""
-    echo "Options:"
-    echo "  -h, --help          Show this help message"
-    echo "  -f, --config FILE   Configuration file (default: ~/.service_monitor.conf)"
-    echo "  -c, --check-only    Check services without restarting"
-    echo "  -r, --restart       Force restart specified services"
-    echo "  -w, --watch         Continuous monitoring mode"
-    echo "  -i, --interval SEC  Check interval in watch mode (default: 30)"
-    echo "  -n, --notify EMAIL  Send email notifications"
-    echo "  -l, --log FILE      Log file (default: ~/.service_monitor.log)"
-    echo "  -d, --daemon        Run as daemon (background)"
-    echo "  -p, --pid-file FILE PID file for daemon mode"
-    echo "  -v, --verbose       Verbose output"
-    echo "  -s, --status        Show current service status"
-    echo "  --dry-run           Show what would be done"
-    echo ""
-    echo "Config File Format:"
-    echo "  service_name:check_command:restart_command:max_failures:cooldown"
-    echo "  nginx:systemctl is-active nginx:systemctl restart nginx:3:300"
-    echo "  mysql:mysqladmin ping:systemctl restart mysql:5:600"
-    echo ""
-    echo "Examples:"
-    echo "  $0 -s                           # Show status of all configured services"
-    echo "  $0 -c nginx mysql               # Check specific services only"
-    echo "  $0 -w -i 60                     # Watch mode with 60s interval"
-    echo "  $0 -r apache2                   # Force restart apache2"
-    echo ""
-    echo "EXAMPLES (run directly from GitHub):"
-    echo "  # Using curl"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/service_monitor.sh)\""
-    echo ""
-    echo "  # Using curl with arguments (e.g., show status)"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/service_monitor.sh)\" -- -s"
-    echo ""
-    echo "  # Using wget"
-    echo "  bash -c \"\$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/service_monitor.sh)\""
-    echo ""
-    echo "RECOMMENDED (download, review, then run):"
-    echo "  curl -fsSL -o /tmp/service_monitor.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/service_monitor.sh"
-    echo "  chmod +x /tmp/service_monitor.sh"
-    echo "  /tmp/service_monitor.sh -h      # Show help"
-    echo "  /tmp/service_monitor.sh -s      # Show service status"
-    exit 1
+print_usage() {
+    cat <<'EOF'
+service_monitor.sh — Advanced System Service Monitoring and Management Tool
+
+USAGE
+    service_monitor.sh [OPTIONS] [SERVICE...]
+
+DESCRIPTION
+    Monitor critical system services and automatically restart failed services
+    with configurable service definitions, custom health checks, continuous
+    monitoring capabilities, email notifications, and comprehensive logging.
+
+OPTIONS
+    -h, --help           Show this help message
+    -f, --config FILE    Configuration file (default: ~/.service_monitor.conf)
+    -c, --check-only     Check services status without restarting
+    -r, --restart        Force restart specified services
+    -w, --watch          Continuous monitoring mode with periodic checks
+    -i, --interval SEC   Check interval in watch mode (default: 30 seconds)
+    -n, --notify EMAIL   Send email notifications for failures and recoveries
+    -l, --log FILE       Log file location (default: ~/.service_monitor.log)
+    -d, --daemon         Run as daemon process in background
+    -p, --pid-file FILE  PID file for daemon mode (default: /tmp/service_monitor.pid)
+    -v, --verbose        Show verbose output and detailed diagnostics
+    -s, --status         Show current status of all configured services
+    --dry-run            Show what actions would be performed
+    --version            Show script version
+
+CONFIGURATION FORMAT
+    service_name:check_command:restart_command:max_failures:cooldown_seconds
+
+    service_name     Name of the service to monitor
+    check_command    Command to verify service is running (exit 0 = running)
+    restart_command  Command to restart the service
+    max_failures     Maximum consecutive failures before giving up
+    cooldown_seconds Time to wait before rechecking after restart
+
+CONFIGURATION EXAMPLES
+    nginx:systemctl is-active nginx:systemctl restart nginx:3:300
+    mysql:systemctl is-active mysql:systemctl restart mysql:5:600
+    apache2:systemctl is-active apache2:systemctl restart apache2:3:300
+    docker:systemctl is-active docker:systemctl restart docker:3:300
+    webapp:/opt/webapp/healthcheck.sh:/opt/webapp/restart.sh:3:300
+
+MONITORING MODES
+    Single Check:       One-time check and restart if needed
+    Watch Mode:         Continuous monitoring with configurable intervals
+    Daemon Mode:        Background process with logging and notifications
+    Status Report:      Display current service status and history
+    Interactive Check:  Check specific services only
+
+EXAMPLES (run directly from GitHub)
+    # Show status of all configured services
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/service_monitor.sh)" -- -s
+
+    # Check specific services without restarting
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/service_monitor.sh)" -- -c nginx mysql
+
+    # Continuous monitoring with 60-second intervals
+    bash -c "$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/service_monitor.sh)" -- -w -i 60
+
+    # Force restart a specific service
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/service_monitor.sh)" -- -r apache2
+
+    # Daemon mode with email notifications
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/service_monitor.sh)" -- -d -n admin@company.com
+
+RECOMMENDED (download, review, then run)
+    curl -fsSL -o /tmp/service_monitor.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/service_monitor.sh
+    chmod +x /tmp/service_monitor.sh
+    /tmp/service_monitor.sh --help      # Show this help
+    /tmp/service_monitor.sh -s          # Check service status
+    /tmp/service_monitor.sh -c nginx    # Check nginx without restart
+    /tmp/service_monitor.sh -w -v       # Watch mode with verbose output
+
+INSTALL AS SYSTEM COMMAND
+    sudo curl -fsSL -o /usr/local/bin/service-monitor https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/service_monitor.sh
+    sudo chmod +x /usr/local/bin/service-monitor
+    service-monitor -d -n admin@company.com
+
+AUTOMATION EXAMPLES
+    # System service monitoring daemon
+    service-monitor -d -n admin@company.com -i 30
+    
+    # Cron job for periodic checks
+    */15 * * * * /usr/local/bin/service-monitor -c > /dev/null
+    
+    # CI/CD service validation
+    service-monitor -c nginx mysql || exit 1
+
+MONITORING FEATURES
+    Configurable Checks:   Custom health check commands per service
+    Failure Thresholds:    Maximum failures before abandoning restart attempts
+    Cooldown Periods:      Prevent rapid restart loops
+    Email Notifications:   Alert on failures and recoveries
+    Detailed Logging:      Comprehensive logs with timestamps
+    State Persistence:     Track failure counts and last restart times
+    Interactive Mode:      Real-time monitoring with user feedback
+
+SAFETY FEATURES
+    Dry Run Mode:          Preview actions without executing them
+    Failure Limits:        Prevent infinite restart loops
+    Cooldown Protection:   Rate limiting for restart attempts
+    Error Handling:        Graceful handling of service failures
+    Logging:               Complete audit trail of all actions
+
+NOTIFICATION SYSTEM
+    Email Alerts:          Configurable email notifications
+    Failure Reports:       Detailed failure analysis and context
+    Recovery Notices:      Confirmation when services recover
+    Rate Limiting:         Prevent notification spam
+    Batch Reporting:       Summary reports for multiple failures
+
+COMMON USE CASES
+    Server Monitoring:     Ensure critical services stay running
+    Application Health:    Monitor custom applications and APIs
+    Database Monitoring:   Keep database services available
+    Web Server Health:     Monitor nginx, apache, and other web servers
+    Container Services:    Monitor Docker and container runtimes
+    Development Services:  Keep development environments running
+
+EXIT CODES
+    0   All services running properly or daemon started successfully
+    1   Some services failed or daemon already running
+    2   Configuration file errors or missing dependencies
+    3   Invalid command line arguments
+    4   Insufficient permissions or system errors
+
+EOF
 }
 
 DEFAULT_CONFIG="$HOME/.service_monitor.conf"
@@ -409,7 +493,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
-                usage
+                print_usage
                 ;;
             -f|--config)
                 config_file="$2"
@@ -460,9 +544,13 @@ main() {
                 dry_run=true
                 shift
                 ;;
+            --version)
+                echo "service_monitor.sh version $SCRIPT_VERSION"
+                exit 0
+                ;;
             -*)
                 echo -e "${RED}Unknown option: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
             *)
                 services+=("$1")

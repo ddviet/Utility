@@ -27,52 +27,120 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-usage() {
-    echo "Usage: $0 [OPTIONS] [PROFILE]"
-    echo ""
-    echo "Profiles:"
-    echo "  basic          Essential tools (git, curl, wget, etc.)"
-    echo "  nodejs         Node.js development environment"
-    echo "  python         Python development environment"
-    echo "  rust           Rust development environment" 
-    echo "  go             Go development environment"
-    echo "  java           Java development environment"
-    echo "  docker         Docker and containerization tools"
-    echo "  web            Web development (nodejs + docker)"
-    echo "  devops         DevOps tools (docker, kubectl, terraform)"
-    echo "  full           Complete development setup (all tools)"
-    echo ""
-    echo "Options:"
-    echo "  -h, --help          Show this help message"
-    echo "  -d, --dry-run       Show what would be installed without installing"
-    echo "  -u, --update        Update existing packages"
-    echo "  -c, --config        Setup configuration files"
-    echo "  -s, --skip-confirm  Skip confirmation prompts"
-    echo "  --version VERSION   Specify version for tools that support it"
-    echo ""
-    echo "Examples:"
-    echo "  $0 nodejs           # Setup Node.js development environment"
-    echo "  $0 full -c          # Full setup with config files"
-    echo "  $0 -d python        # Dry run for Python setup"
-    echo ""
-    echo "EXAMPLES (run directly from GitHub):"
-    echo "  # Using curl - basic development tools"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/env_setup.sh)\" -- basic"
-    echo ""
-    echo "  # Using curl - dry run for full setup"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/env_setup.sh)\" -- --dry-run full"
-    echo ""
-    echo "  # Using wget - Node.js development environment"
-    echo "  bash -c \"\$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/env_setup.sh)\" -- nodejs -c"
-    echo ""
-    echo "RECOMMENDED (download, review, then run):"
-    echo "  curl -fsSL -o /tmp/env_setup.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/env_setup.sh"
-    echo "  chmod +x /tmp/env_setup.sh"
-    echo "  /tmp/env_setup.sh --help           # Show help"
-    echo "  /tmp/env_setup.sh --dry-run basic  # Test basic setup first"
-    echo ""
-    echo "SECURITY NOTE: Always review scripts before running with elevated privileges!"
-    exit 1
+print_usage() {
+    cat <<'EOF'
+env_setup.sh — Development Environment Setup and Configuration Tool
+
+USAGE
+    env_setup.sh [OPTIONS] [PROFILE]
+
+DESCRIPTION
+    Automate installation of development environments and tools with support
+    for multiple programming languages and technology stacks. Provides
+    consistent development environment setup across different systems.
+
+PROFILES
+    basic          Essential development tools (git, curl, wget, vim, etc.)
+    nodejs         Node.js development environment with npm, yarn, pnpm
+    python         Python development environment with pip, virtualenv, poetry
+    rust           Rust development environment with rustup, cargo, clippy
+    go             Go development environment with modules support
+    java           Java development environment with Maven
+    docker         Docker and containerization tools
+    web            Web development stack (nodejs + docker)
+    devops         DevOps toolchain (docker, kubectl, terraform)
+    full           Complete development setup (all available tools)
+
+OPTIONS
+    -h, --help           Show this help message
+    -d, --dry-run        Show what would be installed without installing
+    -u, --update         Update existing packages to latest versions
+    -c, --config         Setup configuration files (.gitconfig, .vimrc, aliases)
+    -s, --skip-confirm   Skip confirmation prompts for automated setup
+    --version VERSION    Specify version for tools that support it
+    --version            Show script version
+
+SUPPORTED PLATFORMS
+    Ubuntu/Debian:  Using apt package manager
+    CentOS/RHEL:    Using dnf/yum package manager
+    Fedora:         Using dnf package manager
+    Arch Linux:     Using pacman package manager
+    macOS:          Using Homebrew package manager
+
+CONFIGURATION FEATURES
+    Git Configuration:   Username, email, aliases, and sensible defaults
+    Vim Setup:          Syntax highlighting, line numbers, and productivity settings
+    Shell Aliases:      Common development shortcuts and productivity aliases
+    PATH Updates:       Automatic PATH configuration for installed tools
+
+EXAMPLES (run directly from GitHub)
+    # Basic development tools installation
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/env_setup.sh)" -- basic
+
+    # Complete development environment with configuration
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/env_setup.sh)" -- full -c
+
+    # Dry run to preview Node.js setup
+    bash -c "$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/env_setup.sh)" -- --dry-run nodejs
+
+    # Python development environment with specific version
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/env_setup.sh)" -- python --version 3.11
+
+RECOMMENDED (download, review, then run)
+    curl -fsSL -o /tmp/env_setup.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/env_setup.sh
+    chmod +x /tmp/env_setup.sh
+    /tmp/env_setup.sh --help              # Show this help
+    /tmp/env_setup.sh --dry-run basic     # Preview basic setup
+    /tmp/env_setup.sh nodejs -c           # Install Node.js with config
+    /tmp/env_setup.sh full --skip-confirm # Automated full setup
+
+INSTALL AS SYSTEM COMMAND
+    sudo curl -fsSL -o /usr/local/bin/dev-setup https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/env_setup.sh
+    sudo chmod +x /usr/local/bin/dev-setup
+    dev-setup python -c
+
+AUTOMATION EXAMPLES
+    # Automated CI/CD environment setup
+    dev-setup basic --skip-confirm
+    
+    # Docker container environment preparation
+    dev-setup web --dry-run > setup_plan.txt
+    dev-setup web --skip-confirm
+    
+    # Team onboarding automation
+    dev-setup full -c --skip-confirm | tee setup.log
+
+INSTALLATION FEATURES
+    Version Management:   Install specific versions when supported
+    Dependency Resolution: Automatic handling of package dependencies
+    Cross-Platform:       Works on major Linux distributions and macOS
+    Rollback Protection:  Dry-run mode to preview changes
+    Update Support:       Update existing installations safely
+
+SECURITY CONSIDERATIONS
+    • Always review scripts before running with elevated privileges
+    • Use dry-run mode to preview changes before installation
+    • Installation sources are official repositories when possible
+    • Configuration files preserve existing settings when safe
+
+COMMON USE CASES
+    New Machine Setup:     Quick development environment bootstrap
+    Team Standardization: Ensure consistent tooling across team members
+    CI/CD Integration:     Automated build environment preparation
+    Container Setup:       Development environment in Docker containers
+    Version Updates:       Bulk update of development tools
+
+EXIT CODES
+    0   Setup completed successfully
+    1   Invalid profile or missing requirements
+    2   Package installation failures
+    3   Configuration setup errors
+    4   User cancelled installation
+
+WARNING: This script modifies system packages and configuration files.
+         Always review the script and use --dry-run before installation.
+
+EOF
 }
 
 detect_os() {
@@ -506,7 +574,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
-                usage
+                print_usage
                 ;;
             -d|--dry-run)
                 dry_run=true
@@ -525,12 +593,17 @@ main() {
                 shift
                 ;;
             --version)
-                version="$2"
-                shift 2
+                if [[ -n "$2" && ! "$2" =~ ^- ]]; then
+                    version="$2"
+                    shift 2
+                else
+                    echo "env_setup.sh version $SCRIPT_VERSION"
+                    exit 0
+                fi
                 ;;
             -*)
                 echo -e "${RED}Unknown option: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
             *)
                 profile="$1"

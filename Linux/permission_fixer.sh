@@ -28,67 +28,127 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
-usage() {
-    echo "Usage: $0 [OPTIONS] [PATH...]"
-    echo ""
-    echo "Permission Fixes:"
-    echo "  -w, --web               Fix web server permissions (755/644)"
-    echo "  -s, --script            Fix script permissions (executable)"
-    echo "  -d, --default           Set default permissions (755 dirs, 644 files)"
-    echo "  -r, --restrictive       Set restrictive permissions (700 dirs, 600 files)"
-    echo "  -p, --public            Set public readable permissions (755 dirs, 644 files)"
-    echo "  --custom DIR:FILE       Custom permissions (e.g., '755:644')"
-    echo "  --owner-only            Remove group/other permissions"
-    echo "  --group-read            Add group read permissions"
-    echo "  --everyone-read         Add read permissions for everyone"
-    echo ""
-    echo "Ownership Fixes:"
-    echo "  -o, --owner USER:GROUP  Change ownership"
-    echo "  --web-owner             Set web server ownership (www-data)"
-    echo "  --user-owner USER       Set user ownership (keep current group)"
-    echo ""
-    echo "Special Fixes:"
-    echo "  --ssh                   Fix SSH key permissions"
-    echo "  --git                   Fix git repository permissions"
-    echo "  --log                   Fix log file permissions"
-    echo "  --temp                  Fix temporary directory permissions"
-    echo "  --home                  Fix home directory permissions"
-    echo ""
-    echo "Options:"
-    echo "  -h, --help              Show this help message"
-    echo "  -R, --recursive         Apply changes recursively"
-    echo "  -v, --verbose           Show detailed output"
-    echo "  -n, --dry-run           Show what would be changed"
-    echo "  -f, --force             Continue on errors"
-    echo "  -b, --backup            Create backup of permissions"
-    echo "  --restore FILE          Restore permissions from backup"
-    echo "  --report FILE           Generate permissions report"
-    echo "  -t, --type TYPE         Only process files of type (file, dir, link)"
-    echo "  -e, --exclude PATTERN   Exclude files matching pattern"
-    echo ""
-    echo "Examples:"
-    echo "  $0 -w -R /var/www/html              # Fix web permissions"
-    echo "  $0 --ssh ~/.ssh                     # Fix SSH permissions"
-    echo "  $0 -d -v /home/user/documents       # Default permissions with verbose"
-    echo "  $0 --custom '750:640' -R /secure    # Custom restrictive permissions"
-    echo "  $0 --dry-run -R /project            # Preview changes"
-    echo ""
-    echo "EXAMPLES (run directly from GitHub):"
-    echo "  # Using curl - fix SSH permissions"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/permission_fixer.sh)\" -- --ssh ~/.ssh"
-    echo ""
-    echo "  # Using curl - preview web permission changes"
-    echo "  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/permission_fixer.sh)\" -- --dry-run -w /var/www"
-    echo ""
-    echo "  # Using wget - set default permissions"
-    echo "  bash -c \"\$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/permission_fixer.sh)\" -- -d -R /home/user/project"
-    echo ""
-    echo "RECOMMENDED (download, review, then run):"
-    echo "  curl -fsSL -o /tmp/permission_fixer.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/permission_fixer.sh"
-    echo "  chmod +x /tmp/permission_fixer.sh"
-    echo "  /tmp/permission_fixer.sh --help        # Show help"
-    echo "  /tmp/permission_fixer.sh --dry-run -d . # Preview changes"
-    exit 1
+print_usage() {
+    cat <<'EOF'
+permission_fixer.sh — Advanced File and Directory Permission Management Tool
+
+USAGE
+    permission_fixer.sh [OPTIONS] [PATH...]
+
+DESCRIPTION
+    Fix common file and directory permission issues automatically with
+    standard permission templates, ownership management, and special
+    scenarios. Includes backup and restore functionality for safe operations.
+
+PERMISSION TEMPLATES
+    -w, --web               Fix web server permissions (755/644)
+    -s, --script            Fix script permissions (make executable)
+    -d, --default           Set default permissions (755 dirs, 644 files)
+    -r, --restrictive       Set restrictive permissions (700 dirs, 600 files)
+    -p, --public            Set public readable permissions (755 dirs, 644 files)
+    --custom DIR:FILE       Custom permissions (e.g., '755:644')
+    --owner-only            Remove group/other permissions (700/600)
+    --group-read            Add group read permissions (750/640)
+    --everyone-read         Add read permissions for everyone (755/644)
+
+OWNERSHIP MANAGEMENT
+    -o, --owner USER:GROUP  Change ownership to specified user and group
+    --web-owner             Set web server ownership (www-data:www-data)
+    --user-owner USER       Set user ownership (keep current group)
+
+SPECIAL SCENARIOS
+    --ssh                   Fix SSH key and directory permissions
+    --git                   Fix git repository permissions
+    --log                   Fix log file permissions (syslog:adm)
+    --temp                  Fix temporary directory permissions (1777)
+    --home                  Fix home directory permissions
+
+OPTIONS
+    -h, --help              Show this help message
+    -R, --recursive         Apply changes recursively to subdirectories
+    -v, --verbose           Show detailed output for each operation
+    -n, --dry-run           Preview changes without applying them
+    -f, --force             Continue processing despite errors
+    -b, --backup            Create backup of current permissions
+    --restore FILE          Restore permissions from backup file
+    --report FILE           Generate detailed permissions report
+    -t, --type TYPE         Only process files of type (file, dir, link)
+    -e, --exclude PATTERN   Exclude files matching regex pattern
+    --version               Show script version
+
+SAFETY FEATURES
+    Backup Creation:      Save current permissions before changes
+    Dry Run Mode:         Preview all changes before applying
+    Restore Function:     Rollback from permission backups
+    Error Handling:       Continue or halt on permission errors
+    Pattern Exclusion:    Skip sensitive files and directories
+
+EXAMPLES (run directly from GitHub)
+    # Fix SSH directory and key permissions
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/permission_fixer.sh)" -- --ssh ~/.ssh
+
+    # Preview web server permission changes
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/permission_fixer.sh)" -- --dry-run -w -R /var/www
+
+    # Set default permissions with verbose output
+    bash -c "$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/permission_fixer.sh)" -- -d -R -v /home/user/project
+
+    # Custom restrictive permissions with backup
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/permission_fixer.sh)" -- --custom '750:640' -R -b /secure
+
+RECOMMENDED (download, review, then run)
+    curl -fsSL -o /tmp/permission_fixer.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/permission_fixer.sh
+    chmod +x /tmp/permission_fixer.sh
+    /tmp/permission_fixer.sh --help           # Show this help
+    /tmp/permission_fixer.sh --dry-run -d .   # Preview default permission changes
+    /tmp/permission_fixer.sh -d -R -v         # Apply with verbose output
+    /tmp/permission_fixer.sh -b --ssh ~/.ssh  # Fix SSH with backup
+
+INSTALL AS SYSTEM COMMAND
+    sudo curl -fsSL -o /usr/local/bin/fix-permissions https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/permission_fixer.sh
+    sudo chmod +x /usr/local/bin/fix-permissions
+    fix-permissions --web -R /var/www/html
+
+AUTOMATION EXAMPLES
+    # Automated web server permission maintenance
+    fix-permissions --web -R /var/www/html
+    
+    # Secure home directory permissions
+    fix-permissions --restrictive -R ~/sensitive_data
+    
+    # Batch SSH key fixing for multiple users
+    for user in /home/*; do
+        fix-permissions --ssh "$user/.ssh" 2>/dev/null || true
+    done
+
+REPORTING AND ANALYSIS
+    Permission Reports:    Detailed analysis of current permissions
+    Unusual Detection:     Identify files with non-standard permissions
+    Backup Tracking:       Maintain history of permission changes
+    Progress Monitoring:   Real-time feedback during operations
+
+COMMON USE CASES
+    Web Server Setup:     Configure proper web application permissions
+    SSH Security:         Ensure SSH keys and config have correct permissions
+    Home Directory:       Fix permissions after file transfers or backups
+    Development Projects: Set appropriate permissions for code repositories
+    System Administration: Bulk permission fixes for server maintenance
+
+SPECIAL PERMISSION SCENARIOS
+    SSH Keys:           600 for private keys, 644 for public keys, 700 for .ssh
+    Web Files:          755 for directories, 644 for files
+    Scripts:            755 for executable scripts
+    Logs:               644 with appropriate ownership (syslog:adm)
+    Temporary Files:    1777 for temp directories (sticky bit)
+
+EXIT CODES
+    0   All permissions fixed successfully
+    1   Some permission changes failed
+    2   Invalid arguments or missing files
+    3   Backup or restore operation failed
+    4   User cancelled operation
+
+EOF
 }
 
 check_permissions() {
@@ -477,7 +537,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
-                usage
+                print_usage
                 ;;
             -w|--web)
                 fix_type="web"
@@ -605,9 +665,13 @@ main() {
                 exclude_pattern="$2"
                 shift 2
                 ;;
+            --version)
+                echo "permission_fixer.sh version $SCRIPT_VERSION"
+                exit 0
+                ;;
             -*)
                 echo -e "${RED}Unknown option: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
             *)
                 paths+=("$1")

@@ -25,44 +25,117 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
-usage() {
-    echo "Usage: $0 [OPTIONS] [DIRECTORY...]"
-    echo ""
-    echo "Options:"
-    echo "  -h, --help          Show this help message"
-    echo "  -m, --method METHOD Detection method: size, hash, name (default: hash)"
-    echo "  -s, --min-size SIZE Minimum file size to check (e.g., 1M, 100K)"
-    echo "  -t, --type TYPES    File types to check (e.g., 'jpg,png,mp4')"
-    echo "  -e, --exclude PATTERN Exclude files matching pattern"
-    echo "  -r, --remove        Remove duplicates interactively"
-    echo "  -f, --force-remove  Remove duplicates automatically (keep first)"
-    echo "  -k, --keep-rule RULE Keep rule: newest, oldest, largest, smallest, first, interactive"
-    echo "  -o, --output FORMAT Output format: text, json, csv (default: text)"
-    echo "  -v, --verbose       Show detailed information"
-    echo "  -n, --dry-run       Show what would be deleted without deleting"
-    echo "  -l, --link          Create hard links instead of removing duplicates"
-    echo "  -p, --parallel      Use parallel processing for large datasets"
-    echo "  --save-report FILE  Save duplicate report to file"
-    echo ""
-    echo "Detection Methods:"
-    echo "  size    - Compare by file size only (fast but less accurate)"
-    echo "  hash    - Compare by SHA256 hash (accurate but slower)"  
-    echo "  name    - Compare by filename only"
-    echo ""
-    echo "Keep Rules:"
-    echo "  newest      - Keep the newest file (by modification time)"
-    echo "  oldest      - Keep the oldest file"
-    echo "  largest     - Keep the largest file"
-    echo "  smallest    - Keep the smallest file"
-    echo "  first       - Keep the first file found"
-    echo "  interactive - Ask user which file to keep"
-    echo ""
-    echo "Examples:"
-    echo "  $0 /home/user/Pictures                     # Find duplicates in Pictures"
-    echo "  $0 -m size -s 10M /media                   # Find large files by size"
-    echo "  $0 -t 'jpg,png' -r /home/user/Photos       # Find image duplicates with removal"
-    echo "  $0 -k newest -f --dry-run /backups         # Dry run removal keeping newest"
-    exit 1
+print_usage() {
+    cat <<'EOF'
+duplicate_finder.sh — Advanced Duplicate File Detection and Management System
+
+USAGE
+    duplicate_finder.sh [OPTIONS] [DIRECTORY...]
+
+DESCRIPTION
+    Advanced duplicate file detection and management system with multiple
+    detection algorithms, intelligent file comparison, and safe removal options.
+    Includes configurable keep/delete policies and space-saving alternatives.
+
+OPTIONS
+    -h, --help           Show this help message
+    -m, --method METHOD  Detection method: size, hash, name (default: hash)
+    -s, --min-size SIZE  Minimum file size to check (e.g., 1M, 100K)
+    -t, --type TYPES     File types to check (e.g., 'jpg,png,mp4')
+    -e, --exclude PATTERN Exclude files matching pattern
+    -r, --remove         Remove duplicates interactively
+    -f, --force-remove   Remove duplicates automatically (keep first)
+    -k, --keep-rule RULE Keep rule: newest, oldest, largest, smallest, first, interactive
+    -o, --output FORMAT  Output format: text, json, csv (default: text)
+    -v, --verbose        Show detailed information
+    -n, --dry-run        Show what would be deleted without deleting
+    -l, --link           Create hard links instead of removing duplicates
+    -p, --parallel       Use parallel processing for large datasets
+    --save-report FILE   Save duplicate report to file
+    --version            Show script version
+
+DETECTION METHODS
+    size    Fast comparison by file size only (less accurate)
+    hash    SHA256 cryptographic hash comparison (accurate but slower)
+    name    Filename-based comparison (fastest, filename duplicates only)
+
+KEEP POLICIES
+    newest      Keep the newest file (by modification time)
+    oldest      Keep the oldest file (by modification time)
+    largest     Keep the largest file (by size)
+    smallest    Keep the smallest file (by size)
+    first       Keep the first file found (filesystem order)
+    interactive Interactive selection for each duplicate group
+
+OUTPUT FORMATS
+    text    Human-readable formatted output with colors
+    json    Machine-readable JSON format for automation
+    csv     Comma-separated values for spreadsheet import
+
+EXAMPLES (run directly from GitHub)
+    # Find duplicates in Pictures directory
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/duplicate_finder.sh)" -- /home/user/Pictures
+
+    # Find large duplicate files by size (fast scan)
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/duplicate_finder.sh)" -- -m size -s 10M /media
+
+    # Find and remove image duplicates with interactive selection
+    bash -c "$(wget -qO- https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/duplicate_finder.sh)" -- -t 'jpg,png,jpeg' -r /home/user/Photos
+
+    # Dry run removal keeping newest files
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/duplicate_finder.sh)" -- -k newest -f --dry-run /backups
+
+RECOMMENDED (download, review, then run)
+    curl -fsSL -o /tmp/duplicate_finder.sh https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/duplicate_finder.sh
+    chmod +x /tmp/duplicate_finder.sh
+    /tmp/duplicate_finder.sh --help             # Show this help
+    /tmp/duplicate_finder.sh --dry-run .        # Preview what would be found
+    /tmp/duplicate_finder.sh -v /media          # Verbose duplicate scan
+    /tmp/duplicate_finder.sh -r -k interactive  # Interactive removal
+
+INSTALL AS SYSTEM COMMAND
+    sudo curl -fsSL -o /usr/local/bin/find-duplicates https://raw.githubusercontent.com/ddviet/Utility/refs/heads/master/Linux/duplicate_finder.sh
+    sudo chmod +x /usr/local/bin/find-duplicates
+    find-duplicates -r -k newest ~/Downloads
+
+AUTOMATION EXAMPLES
+    # Automated cleanup of download directory
+    find-duplicates -f -k newest ~/Downloads
+    
+    # Weekly duplicate cleanup with reporting
+    find-duplicates --save-report weekly_dups.csv -o csv /shared/storage
+    
+    # Large file duplicate detection across multiple drives
+    find-duplicates -m size -s 100M -o json /mnt/drive* > large_dups.json
+
+SAFETY FEATURES
+    Dry Run Mode:        Preview changes before applying
+    Interactive Mode:    User confirmation for each action
+    Hard Link Option:    Save space without deleting files
+    Backup Information:  Show file details before deletion
+    Pattern Exclusion:   Skip important files and directories
+
+DUPLICATE DETECTION FEATURES
+    Multiple Algorithms:  Size, cryptographic hash, and filename comparison
+    Smart File Filtering: File type, size, and pattern-based filtering
+    Batch Processing:     Handle large datasets efficiently
+    Progress Tracking:    Real-time progress for large scans
+    Detailed Reporting:   Comprehensive duplicate analysis and statistics
+
+COMMON USE CASES
+    Photo Management:    Remove duplicate photos and images
+    Storage Cleanup:     Free up disk space by removing redundant files
+    Backup Verification: Find and consolidate duplicate backup files
+    Download Cleanup:    Clean up accumulated duplicate downloads
+    Media Organization:  Deduplicate music, video, and document collections
+
+EXIT CODES
+    0   No duplicates found or operation completed successfully
+    1   Duplicates found and reported
+    2   File system errors or permission issues
+    3   Invalid arguments or configuration errors
+
+EOF
 }
 
 calculate_hash() {
@@ -580,7 +653,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
-                usage
+                print_usage
                 ;;
             -m|--method)
                 method="$2"
@@ -636,9 +709,13 @@ main() {
                 save_report="$2"
                 shift 2
                 ;;
+            --version)
+                echo "duplicate_finder.sh version $SCRIPT_VERSION"
+                exit 0
+                ;;
             -*)
                 echo -e "${RED}Unknown option: $1${NC}" >&2
-                usage
+                print_usage
                 ;;
             *)
                 directories+=("$1")
